@@ -9,7 +9,7 @@ from com.wangyin.cds.monitor.model.dbMonitor import DbMonitorConfig
 import urllib
 import urllib2
 
-class restfulUtil:
+class CDSUtil:
     
     @staticmethod    
     def getDbConfigByType(type,gropuId):
@@ -87,6 +87,7 @@ class restfulUtil:
         print r
 
 class URLS:
+    MONITOR_TASK_ENVENT = 'http://localhost:8088'
     GET_DB_CONFIG = 'http://localhost:8088/dbinfo/type/{0}/dbGroupId/{0}'
     GET_MONITOR_CONFIG_BY_GROUPID = 'http://localhost:8088/dbmonitor/dbGroupId/{0}'
     GET_MONITOR_CONFIG_BY_MONITORID = 'http://localhost:8088/dbmonitor/monitorId/{0}'

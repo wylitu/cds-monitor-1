@@ -6,32 +6,35 @@ from mysql.connector import errorcode
 from com.wangyin.cds.monitor.utils.loggerUtil import LoggerUtil
 
 
-class ClusterConnector:
-    logger = LoggerUtil.getLogger('ClusterConnector')
+class DbConnector:
+    logger = LoggerUtil.getLogger('DbConnector')
 
     def __init__(self):
         self.config = ConfigParser.ConfigParser()
         self.config.read('../config/cds.cfg')
 
-    def new_master_conn(self):
+    def new_master_conn(self,cls):
         try:
             h = self.config.get('master','host')
-            p = self.config.getint('backingstore','port')
-            s = self.config.get('backingstore','db')
-            u = self.config.get('backingstore','user')
-            k = self.config.get('backingstore','pwd')
+            p = self.config.getint('master','port')
+            s = self.config.get('master','db')
+            u = self.config.get('master','user')
+            k = self.config.get('master','pwd')
             cnx = connector.connect(user=u,password=k,host=h,database=s,port=p)
             return cnx
         except Error as err:
-            print(err)
+            cls.logger.error(err)
         return None
 
-    def new_slave_conn(self,host,port,db):
+    def new_slave_conn(self,cls):
         try:
-            user_name = self.config.get('group','user')
-            password = self.config.get('group','pwd')
-            cnx = connector.connect(user=user_name,password=password, host=host,port=port,database=db)
+            h = self.config.get('slave','host')
+            p = self.config.getint('slave','port')
+            s = self.config.get('slave','db')
+            u = self.config.get('slave','user')
+            k = self.config.get('slave','pwd')
+            cnx = connector.connect(user=u,password=k,host=h,database=s,port=p)
             return cnx
         except Error as e:
-            ClusterConnector.logger.error()
+            cls.logger.error(e.msg,e)
         return None

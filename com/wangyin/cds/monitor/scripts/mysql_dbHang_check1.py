@@ -4,17 +4,17 @@ import time,datetime
 import argparse
 from mysql.connector import Error
 
-class DbHangCheck:
+class MysqlDbHangCheck:
     
     @staticmethod   
     def check(cls,host,port,dbName,user,passwd):
-        dbMinitorIns = {}
+
         try:
             conn = connector.connect(user=user,password=passwd,host=host,database=dbName,port=port)
             cls.createHeartTable(conn,dbName)
             cursor = conn.cursor()
         except Exception, e:
-            print e.message
+            print e
             return
         try:
             ISOTIMEFORMAT='%Y-%m-%d %X'
@@ -24,8 +24,7 @@ class DbHangCheck:
             conn.commit()
         except Exception, e:
             conn.rollback()
-            print e.message
-            return
+            print('update table `HA_HEARTBEAT` fails!{}'.format(e))
         finally:
             cursor.close()
             conn.close()
@@ -40,8 +39,8 @@ class DbHangCheck:
              try:  
                  cursor.execute(sql)  
              except Exception,e:  
-                 print('create table `HA_HEARTBEAT` fails!{}'.format(e))  
-
+                 print('create table `HA_HEARTBEAT` fails!{}'.format(e))
+                 return
              insertSql = 'insert into `HA_HEARTBEAT` values(1234567,now())'
              try:  
                  cursor.execute(insertSql)
@@ -60,6 +59,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # 执行
-    shell = DbHangCheck.check(DbHangCheck,args.h,args.p,args.n,args.u,args.pd)
+    shell = MysqlDbHangCheck.check(MysqlDbHangCheck,args.h,args.p,args.n,args.u,args.pd)
 
 

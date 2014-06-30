@@ -1,12 +1,12 @@
 # coding: utf-8
-from connector import ClusterConnector
+from com.wangyin.cds.monitor.utils.connector import DbConnector
 import time,datetime
 from mysql.connector import Error
 
 class DbHangCheck:
 
     def check(self,dbInfo,dbMonitor):
-        
+        return
     def createHeartTable(self,conn,dbName):
         cursor = conn.cursor()
         sql = "SELECT count(*) FROM information_schema.tables WHERE table_schema ='"+dbName+"' AND table_name = 'HA_HEARTBEAT'"
@@ -28,6 +28,7 @@ class DbHangCheck:
                 print('insert table `HA_HEARTBEAT` fails!{}'.format(e))
 
     def start(self):
+         return
 
     if __name__ == '__main__':
         start()

@@ -3,14 +3,58 @@ __author__ = 'wylitu'
 import requests
 import json
 from com.wangyin.cds.monitor.model.dbMonitorInstance import DbMonitorInstance
-from com.wangyin.cds.monitor.model.dbInfo import DbInfo
-from com.wangyin.cds.monitor.model.dbMonitor import MonitorIndexConfig
+from com.wangyin.cds.monitor.model.dbInfo import DbConfig,DbUnit
 from com.wangyin.cds.monitor.model.dbMonitor import DbMonitorConfig
+from com.wangyin.cds.monitor.model.monitorTaskEvent import MonitorTaskEvent
 import urllib
 import urllib2
+import datetime
+import ConfigParser
+from configUtil import ConfigUtil
 
 class CDSUtil:
-    
+
+    config = ConfigParser.ConfigParser()
+    config.read('../config/agent.cfg')
+    serverIp = config.get('cdsServer','host')
+    serverPort = config.get('cdsServer','port')
+    monitorHostIp = ConfigUtil().get_host_ip()
+
+    @staticmethod
+    def getEvents(cls):
+        url = URLS.MONITOR_TASK_ENVENT.format(cls.serverIp,cls.serverPort,cls.monitorHostIp)
+        print url
+        r = requests.get(url)
+        print r
+        retInfo = json.loads(r.text)
+        errorCode = retInfo['errorCode']
+        if errorCode != 0:
+            print(retInfo['errMsg'])
+            return None
+        retEvents = []
+        events = retInfo['resultInfo']
+        print retInfo['resultInfo']
+        if len(events) != 0:
+            for event in events:
+                dbinfo = DbConfig(event['dbInfoId'],event['dbMonitorGroupId'], event['ip'], event['port'],event['dbType'])
+                monitorId = event['dbMonitorId']
+                eventId = event['eventId']
+                eventType = event['eventType']
+                event = MonitorTaskEvent(eventId,eventType,monitorId,dbinfo)
+                retEvents.append(event)
+        return retEvents
+    @staticmethod
+    def getDbConfigsByIp(ip):
+        URL = URLS.GET_DB_CONFIG_BY_IP.format(ip)
+        r = requests.get(URL)
+        dbinfos = json.loads(r.text)
+        retDbinfos = []
+        if len(dbinfos) != 0:
+            for dbinfo in dbinfos:
+                dbinfo = DbConfig(dbinfo['groupId'], dbinfo['ip'], dbinfo['port'],dbinfo['dbName'],dbinfo['masterOrSlave'],dbinfo['dbType'],dbinfo['dbStatus'])
+                retDbinfos.append(dbinfo)
+        return retDbinfos
+
     @staticmethod    
     def getDbConfigByType(type,gropuId):
         URL = URLS.GET_DB_CONFIG.format(type,gropuId)
@@ -19,7 +63,7 @@ class CDSUtil:
         retDbinfos = []
         if len(dbinfos) != 0:
             for dbinfo in dbinfos:
-                dbinfo = DbInfo(dbinfo['groupId'], dbinfo['ip'], dbinfo['port'],dbinfo['dbName'],dbinfo['masterOrSlave'],dbinfo['dbType'],dbinfo['dbStatus'])
+                dbinfo = DbConfig(dbinfo['groupId'], dbinfo['ip'], dbinfo['port'],dbinfo['dbName'],dbinfo['masterOrSlave'],dbinfo['dbType'],dbinfo['dbStatus'])
                 retDbinfos.append(dbinfo)
         return retDbinfos
     
@@ -32,65 +76,78 @@ class CDSUtil:
         if len(dbMonitors) != 0:
             for dbMonitor in dbMonitors:
                 dbMonitorConfig = DbMonitorConfig(dbMonitor['dbGroupId'],dbMonitor['monitorItem'],dbMonitor['monitorItemName'],dbMonitor['errorNumUpper'],dbMonitor['checkInterval'])
-                dbMonitorIndexs = dbMonitor['dbMonitorIndexs']
-                if len(dbMonitorIndexs) != 0:
-                    for dbMonitorIndex in dbMonitorIndexs:
-                         indexConfig = MonitorIndexConfig(dbMonitorIndex['indexItem'],dbMonitorIndex['indexItemName'],dbMonitorIndex['indexPower'],dbMonitorIndex['thresholdUpper'],dbMonitorIndex['thresholdLower'])
-                         dbMonitorConfig.add_monitorIndex(indexConfig)
                 dbMonitorConfigs.append(dbMonitorConfig)
         return dbMonitorConfigs
 
     @staticmethod
-    def getDbMonitorConfigByDbMonitorId(monitorId):
-        URL = URLS.GET_MONITOR_CONFIG_BY_MONITORID.format(monitorId)
+    def getDbMonitorConfigByDbMonitorId(cls,monitorId):
+        URL = URLS.GET_MONITOR_CONFIG_BY_MONITORID.format(cls.serverIp,cls.serverPort,monitorId)
         r = requests.get(URL)
-        dbMonitors = json.loads(r.text)
-        dbMonitorConfigs = []
-        if len(dbMonitors) != 0:
-            for dbMonitor in dbMonitors:
-                dbMonitorConfig = DbMonitorConfig(dbMonitor['dbGroupId'],dbMonitor['monitorItem'],dbMonitor['monitorItemName'],dbMonitor['errorNumUpper'],dbMonitor['checkInterval'])
-                dbMonitorIndexs = dbMonitor['dbMonitorIndexs']
-                if len(dbMonitorIndexs) != 0:
-                    for dbMonitorIndex in dbMonitorIndexs:
-                         indexConfig = MonitorIndexConfig(dbMonitorIndex['indexItem'],dbMonitorIndex['indexItemName'],dbMonitorIndex['indexPower'],dbMonitorIndex['thresholdUpper'],dbMonitorIndex['thresholdLower'])
-                         dbMonitorConfig.add_monitorIndex(indexConfig)
-                dbMonitorConfigs.append(dbMonitorConfig)
-        return dbMonitorConfigs
+        retInfo = json.loads(r.text)
+        errorCode = retInfo['errorCode']
+        if errorCode != 0:
+            print(retInfo['errMsg'])
+            return None
+        dbMonitor = retInfo['resultInfo']
+        dbMonitorConfig = None
+        print dbMonitor
+        if dbMonitor != None:
+            dbMonitorConfig = DbMonitorConfig(dbMonitor['id'],dbMonitor['dbMonitorGroupId'],dbMonitor['monitorItem'],dbMonitor['checkTimes'],dbMonitor['errorNumUpper'],
+                                                  dbMonitor['checkInterval'],dbMonitor['monitorScriptType'],dbMonitor['monitorScriptPath'])
+        return dbMonitorConfig
+
+    @staticmethod
+    def get_db_unit(cls,ip,db_type):
+        URL = URLS.GET_DB_UNIT.format(cls.serverIp,cls.serverPort,ip,db_type)
+        r = requests.get(URL)
+        retInfo = json.loads(r.text)
+        errorCode = retInfo['errorCode']
+        if errorCode != 0:
+            print(retInfo['errMsg'])
+            return None
+        db_units = retInfo['resultInfo']
+        print db_units
+        dbUnits = []
+        if len(db_units) != 0:
+            for db_unit in db_units:
+                db_unit = DbUnit(db_unit['ip'],db_unit['port'],db_unit['dbName'],'root',db_unit['passwd'],db_unit['masterOrSlave'],db_unit['dbType'])
+                dbUnits.append(db_unit)
+        return dbUnits
     
     @staticmethod
     def monitorInstanceFormat(monitorInstance):
         monitorIns =  {}
-        monitorIns['dbGroupId']= monitorInstance.getGroupId()
-        monitorIns['monitorItem'] = monitorInstance.getMonitorItem()
-        monitorIns['errorNum'] = monitorInstance.getErrorNum()
-        monitorIns['alarmMsg'] = monitorInstance.getAlarmMsg()
-        monitorIns['monitorItemName'] = monitorInstance.getMonitorItemName()
-        indexInsList= []
-        indexInstances = monitorInstance.getMonitorIndexInstances()
-        if len(indexInstances)!=0:
-            for indexInstance in indexInstances :
-                 indexIns =  {}
-                 indexIns['indexItem'] = indexInstance.getIndexItem()
-                 indexIns['indexValue'] = indexInstance.getValue()
-                 indexIns['indexItemName'] = indexInstance.getIndexItemName()
-                 indexInsList.append(indexIns)
-            monitorIns['dbMonitorIndexInstances'] = indexInsList
-            print monitorIns
+        monitorIns['dbMinitorId']= monitorInstance.db_monitor_id
+        monitorIns['monitorItem'] = monitorInstance.monitor_item
+        monitorIns['creationDate'] = monitorInstance.creation_date
+        monitorIns['errorNum'] = monitorInstance.error_num
+        monitorIns['alarmMsg'] = monitorInstance.alarm_msg
+        monitorIns['monitorValue'] = monitorInstance.monitor_value
+        print monitorIns
         return monitorIns
 
     @staticmethod
-    def sendMonitorInstance(monitorIns):
+    def sendMonitorInstance(cls,monitorIns):
+        monitorIns = cls.monitorInstanceFormat(monitorIns)
         print 'send monitorInsance to cds server...'
+        print monitorIns
         values = json.dumps(monitorIns)
+        print values
         headers={'Content-Type': 'application/json'}
-        r = requests.post(URLS.COLLECT_MONITOR_RESULT, data=values, headers=headers)
+        url = URLS.COLLECT_MONITOR_RESULT.format(cls.serverIp,cls.serverPort)
+        r = requests.post(url, data=values, headers=headers)
         print r
 
 class URLS:
-    MONITOR_TASK_ENVENT = 'http://localhost:8088'
-    GET_DB_CONFIG = 'http://localhost:8088/dbinfo/type/{0}/dbGroupId/{0}'
-    GET_MONITOR_CONFIG_BY_GROUPID = 'http://localhost:8088/dbmonitor/dbGroupId/{0}'
-    GET_MONITOR_CONFIG_BY_MONITORID = 'http://localhost:8088/dbmonitor/monitorId/{0}'
-    COLLECT_MONITOR_RESULT = 'http://localhost:8080/dbmonitor/collectMonitorResult/json'
+    MONITOR_TASK_ENVENT = 'http://{0}:{1}/rest/events/ip/{2}'
+    GET_DB_CONFIG = 'http://{0}:{1}/rest/dbinfo/type/{2}/dbGroupId/{3}'
+    GET_DB_CONFIG_BY_IP = 'http://{0}:{1}/rest/dbInfo/ip/{2}'
+    GET_MONITOR_CONFIG_BY_GROUPID = 'http://{0}:{1}/rest/dbmonitor/dbGroupId/{2}'
+    GET_MONITOR_CONFIG_BY_MONITORID = 'http://{0}:{1}/rest/monitor/monitorId/{2}'
+    GET_DB_UNIT = 'http://{0}:{1}/rest/dbinfo/dbunits/{2}/dbtype/{3}'
+    COLLECT_MONITOR_RESULT = 'http://{0}:{1}/rest/monitor/collectMonitorResult/json'
 
-
+if __name__ == '__main__':
+    #print(CDSUtil.getDbMonitorConfigByDbMonitorId(CDSUtil,1))
+    #print( CDSUtil.getEvents(CDSUtil))
+    print(CDSUtil.sendMonitorInstance(CDSUtil,DbMonitorInstance('1','dbhang_check',datetime.datetime.now().microsecond,'2', '50','db connect error')))

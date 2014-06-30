@@ -1,23 +1,58 @@
-from apscheduler.scheduler import Scheduler
-from com.wangyin.cds.monitor.utils.loggerUtil import LoggerUtil
-from com.wangyin.cds.monitor.utils.cdsUtil import CDSUtil
-from concurrent.futures import ProcessPoolExecutor
 
+from apscheduler.scheduler import Scheduler
+#from com.wangyin.cds.monitor.utils.loggerUtil import LoggerUtil
+from com.wangyin.cds.monitor.utils.cdsUtil import CDSUtil
+from com.wangyin.cds.monitor.scheduler.monitorTask import MonitorTask
+from com.wangyin.cds.monitor.utils.configUtil  import ConfigUtil
+import time
 
 class MonitorScheduler:
 
-    logger = LoggerUtil.getLogger('MonitorScheduler')
-    def __init__(self,dbConfig,dbMonitorConfig):
+    #logger = LoggerUtil.getLogger('MonitorScheduler')
+
+    def __init__(self,events):
         self.scheduler = Scheduler(daemonic = False)
-        self.scheduler.cron_schedule(second='*', day_of_week='0-4', hour='9-12,13-15', jobstore='monitorListener')
-        self.dbConfig = dbConfig
-        self.dbMonitorConfig = dbMonitorConfig
+        self.events = events
+        self.flag = False
+        if self.events !=None:
+            self.flag = True
+
+    def monitorListener(self):
+         print self.events
+         if self.flag == True:
+            self.monitor_task_start(self.events)
+            flag = False
+         else:
+             events = self.event_filter(CDSUtil.getEvents(CDSUtil))
+             self.monitor_task_start(events)
+
     def start(self):
-        self.scheduler.start()
+        print('MonitorScheduler start ...')
+        while True:
+             self.monitorListener()
+             time.sleep(10)
+        #self.scheduler.add_interval_job('monitorListener',seconds=5)
+        #self.scheduler.start()
     def stop(self):
          self.scheduler._stopped()
-    def monitorListener(self):
-         return
+
+
+    # Filtering duplicate events
+    def event_filter(self,events):
+        eventInfos = []
+        if events == None:
+            return None
+        for event in events:
+             eventId = ConfigUtil().getEventId(event.getMonitorId())
+             if event.getEventId() != eventId:
+                 eventInfos.append(event)
+        return eventInfos
+
+    def monitor_task_start(self,events):
+         if events == None:
+            return
+         for event in events:
+              MonitorTask(event).start()
 
     def err_listener(self,cls,event):
         if event.exception:

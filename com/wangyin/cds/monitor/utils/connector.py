@@ -3,11 +3,11 @@ import ConfigParser
 from mysql import connector
 from mysql.connector import Error
 from mysql.connector import errorcode
-from com.wangyin.cds.monitor.utils.loggerUtil import LoggerUtil
+#from com.wangyin.cds.monitor.utils.loggerUtil import LoggerUtil
 
 
 class DbConnector:
-    logger = LoggerUtil.getLogger('DbConnector')
+    #logger = LoggerUtil.getLogger('DbConnector')
 
     def __init__(self):
         self.config = ConfigParser.ConfigParser()
@@ -27,6 +27,19 @@ class DbConnector:
         return None
 
     def new_slave_conn(self,cls):
+        try:
+            h = self.config.get('slave','host')
+            p = self.config.getint('slave','port')
+            s = self.config.get('slave','db')
+            u = self.config.get('slave','user')
+            k = self.config.get('slave','pwd')
+            cnx = connector.connect(user=u,password=k,host=h,database=s,port=p)
+            return cnx
+        except Error as e:
+            cls.logger.error(e.msg,e)
+        return None
+
+    def new_group_conn(self,cls):
         try:
             h = self.config.get('slave','host')
             p = self.config.getint('slave','port')

@@ -4,7 +4,7 @@ from com.wangyin.cds.monitor.model.dbInfo import DbConfig
 from com.wangyin.cds.monitor.model.dbMonitor import DbMonitorConfig
 from com.wangyin.cds.monitor.model.dbMonitorInstance import DbMonitorInstance
 from com.wangyin.cds.monitor.utils.cdsUtil import CDSUtil
-import datetime
+import time
 class MonitorCollector:
 
     #logger = LoggerUtil.getLogger('MonitorCollector')
@@ -30,15 +30,15 @@ class MonitorCollector:
              while True:
                  buff = p.stdout.readline()
                  print buff
-                 if buff == '' and p.poll() != None:
+                 if buff != '':
                      break
              errorMsg = buff
              if buff == None:
-                 CDSUtil.sendMonitorInstance(CDSUtil,DbMonitorInstance(self.dbMonitor.id,self.dbMonitor.monitor_item,datetime.datetime.now().microsecond,i, '',''))
+                 CDSUtil.sendMonitorInstance(CDSUtil,DbMonitorInstance(self.dbMonitor.id,self.dbMonitor.monitor_item,self.dbMonitor.monitor_item,time.time()*1000/1000,i, '',''))
                  i=0
              else:
                  i = i+1
-        CDSUtil.sendMonitorInstance(CDSUtil,DbMonitorInstance(self.dbMonitor.id,self.dbMonitor.monitor_item,datetime.datetime.now().microsecond,self.retry_num+1, '',errorMsg))
+        CDSUtil.sendMonitorInstance(CDSUtil,DbMonitorInstance(self.dbMonitor.id,self.dbMonitor.monitor_item,time.time()*1000/1000,self.retry_num+1, '',errorMsg))
     def stop(self):
          self.retry_num = -1
 

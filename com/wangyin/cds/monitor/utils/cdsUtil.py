@@ -24,7 +24,11 @@ class CDSUtil:
     def getEvents(cls):
         url = URLS.MONITOR_TASK_ENVENT.format(cls.serverIp,cls.serverPort,cls.monitorHostIp)
         print url
-        r = requests.get(url)
+        try:
+            r = requests.get(url)
+        except Exception as e:
+            print(e)
+            return None
         print r
         retInfo = json.loads(r.text)
         errorCode = retInfo['errorCode']
@@ -130,13 +134,14 @@ class CDSUtil:
     def sendMonitorInstance(cls,monitorIns):
         monitorIns = cls.monitorInstanceFormat(monitorIns)
         print 'send monitorInsance to cds server...'
-        print monitorIns
         values = json.dumps(monitorIns)
         print values
         headers={'Content-Type': 'application/json'}
         url = URLS.COLLECT_MONITOR_RESULT.format(cls.serverIp,cls.serverPort)
         r = requests.post(url, data=values, headers=headers)
-        print r
+        retInfo = json.loads(r.text)
+        if retInfo['errorCode'] !=0:
+            print retInfo['errMsg']
 
 class URLS:
     MONITOR_TASK_ENVENT = 'http://{0}:{1}/rest/events/ip/{2}'
@@ -150,4 +155,4 @@ class URLS:
 if __name__ == '__main__':
     #print(CDSUtil.getDbMonitorConfigByDbMonitorId(CDSUtil,1))
     #print( CDSUtil.getEvents(CDSUtil))
-    print(CDSUtil.sendMonitorInstance(CDSUtil,DbMonitorInstance('1','dbhang_check',datetime.datetime.now().microsecond,'2', '50','db connect error')))
+    print(CDSUtil.sendMonitorInstance(CDSUtil,DbMonitorInstance('1','dbhang_check',datetime.datetime.now().microsecond,'2', '','db connect error')))

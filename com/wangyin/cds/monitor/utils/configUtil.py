@@ -2,6 +2,7 @@
 __author__ = 'wylitu'
 import ConfigParser
 from ipUtil import  IpUtil
+from com.wangyin.cds.monitor.model.monitorTaskEvent import MonitorTaskEvent
 class ConfigUtil :
 
     def __init__(self):
@@ -14,11 +15,10 @@ class ConfigUtil :
         monitorId = ''
         eventId = ''
         for event in events:
-             monitorId.__add__(event.getMonitorId()).__add__(',')
-             eventId.__add__(event.getEventId()).__add__(',')
-
-        self.config.set('events', 'eventId',eventId[-1:])
-        self.config.set('events', 'monitorId',monitorId[-1:])
+             monitorId =  monitorId.__add__(str(event.monitorId)).__add__(',')
+             eventId = eventId.__add__(event.eventId).__add__(',')
+        self.config.set('events', 'eventid',eventId[:-1])
+        self.config.set('events', 'monitorid',monitorId[:-1])
         self.config.write(open('../config/agent.cfg', 'w'))
 
     def getEventId(self,monitorId=''):
@@ -52,4 +52,7 @@ class ConfigUtil :
         self.set_host_ip(ip)
 
 if __name__ == '__main__':
-    print ConfigUtil().get_host_ip()
+    #print ConfigUtil().get_host_ip()
+    events =[]
+    events.append(MonitorTaskEvent('22222', 'ddsd','1', None))
+    ConfigUtil().setEvents(events)

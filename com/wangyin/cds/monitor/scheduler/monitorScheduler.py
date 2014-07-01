@@ -14,6 +14,7 @@ class MonitorScheduler:
         self.scheduler = Scheduler(daemonic = False)
         self.events = events
         self.flag = False
+        self.runflag = True
         if self.events !=None:
             self.flag = True
 
@@ -28,13 +29,16 @@ class MonitorScheduler:
 
     def start(self):
         print('MonitorScheduler start ...')
-        while True:
-             self.monitorListener()
-             time.sleep(10)
+        while self.runflag:
+            try:
+                self.monitorListener()
+            except Exception as e:
+                print(e)
+            time.sleep(60)
         #self.scheduler.add_interval_job('monitorListener',seconds=5)
         #self.scheduler.start()
     def stop(self):
-         self.scheduler._stopped()
+         self.runflag = False
 
 
     # Filtering duplicate events
@@ -46,6 +50,7 @@ class MonitorScheduler:
              eventId = ConfigUtil().getEventId(event.getMonitorId())
              if event.getEventId() != eventId:
                  eventInfos.append(event)
+        ConfigUtil().setEvents(eventInfos)
         return eventInfos
 
     def monitor_task_start(self,events):

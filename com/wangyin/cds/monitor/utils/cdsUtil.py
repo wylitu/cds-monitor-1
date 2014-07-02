@@ -8,7 +8,7 @@ from com.wangyin.cds.monitor.model.dbMonitor import DbMonitorConfig
 from com.wangyin.cds.monitor.model.monitorTaskEvent import MonitorTaskEvent
 import urllib
 import urllib2
-import datetime
+import datetime,time
 import ConfigParser
 from configUtil import ConfigUtil
 
@@ -123,6 +123,7 @@ class CDSUtil:
         monitorIns =  {}
         monitorIns['dbMinitorId']= monitorInstance.db_monitor_id
         monitorIns['monitorItem'] = monitorInstance.monitor_item
+        monitorIns['dbInfoId'] = monitorInstance.db_info_id
         monitorIns['creationDate'] = monitorInstance.creation_date
         monitorIns['errorNum'] = monitorInstance.error_num
         monitorIns['alarmMsg'] = monitorInstance.alarm_msg
@@ -140,6 +141,7 @@ class CDSUtil:
         url = URLS.COLLECT_MONITOR_RESULT.format(cls.serverIp,cls.serverPort)
         r = requests.post(url, data=values, headers=headers)
         retInfo = json.loads(r.text)
+        print(retInfo)
         if retInfo['errorCode'] !=0:
             print retInfo['errMsg']
 
@@ -155,4 +157,4 @@ class URLS:
 if __name__ == '__main__':
     #print(CDSUtil.getDbMonitorConfigByDbMonitorId(CDSUtil,1))
     #print( CDSUtil.getEvents(CDSUtil))
-    print(CDSUtil.sendMonitorInstance(CDSUtil,DbMonitorInstance('1','dbhang_check',datetime.datetime.now().microsecond,'2', '','db connect error')))
+    print(CDSUtil.sendMonitorInstance(CDSUtil,DbMonitorInstance('1','1','dbhang_check',int(time.time()),'2', '','db connect error')))

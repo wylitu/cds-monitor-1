@@ -4,7 +4,7 @@ from com.wangyin.cds.monitor.model.dbInfo import DbConfig
 from com.wangyin.cds.monitor.model.dbMonitor import DbMonitorConfig
 from com.wangyin.cds.monitor.model.dbMonitorInstance import DbMonitorInstance
 from com.wangyin.cds.monitor.utils.cdsUtil import CDSUtil
-import time
+import time,math
 class MonitorCollector:
 
     #logger = LoggerUtil.getLogger('MonitorCollector')
@@ -20,6 +20,7 @@ class MonitorCollector:
     def start(self):
         check_interval = self.dbMonitor.check_interval
         scriptPath = self.dbMonitor.scriptPath
+        db_info_id = self.dbConfig.db_info_id
         dbUnit = self.dbConfig.db_units[0]
         errorMsg = ''
         i=0
@@ -34,11 +35,13 @@ class MonitorCollector:
                      break
              errorMsg = buff
              if buff == None:
-                 CDSUtil.sendMonitorInstance(CDSUtil,DbMonitorInstance(self.dbMonitor.id,self.dbMonitor.monitor_item,self.dbMonitor.monitor_item,time.time()*1000/1000,i, '',''))
+                 CDSUtil.sendMonitorInstance(CDSUtil,DbMonitorInstance(self.dbMonitor.id,db_info_id,self.dbMonitor.monitor_item
+                                                                       ,self.dbMonitor.monitor_item,int(time.time()),i, '',''))
                  i=0
              else:
                  i = i+1
-        CDSUtil.sendMonitorInstance(CDSUtil,DbMonitorInstance(self.dbMonitor.id,self.dbMonitor.monitor_item,time.time()*1000/1000,self.retry_num+1, '',errorMsg))
+        CDSUtil.sendMonitorInstance(CDSUtil,DbMonitorInstance(self.dbMonitor.id,db_info_id,self.dbMonitor.monitor_item,int(time.time())
+                                                              ,self.retry_num+1, '',errorMsg))
     def stop(self):
          self.retry_num = -1
 

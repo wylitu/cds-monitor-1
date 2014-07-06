@@ -3,11 +3,13 @@
 from com.wangyin.cds.monitor.utils.scriptLoad import ScriptLoad
 from com.wangyin.cds.monitor.utils.cdsUtil import CDSUtil
 from com.wangyin.cds.monitor.scheduler.monitorCollector import MonitorCollector
-class MonitorTask:
+import multiprocessing
+class MonitorTaskProcess(multiprocessing.Process):
 
     #logger = LoggerUtil.getLogger('MonitorTask')
 
     def __init__(self,event):
+         super(MonitorTaskProcess, self).__init__()
          self.event = event
          host = self.event.dbConfig.ip
          db_type = self.event.dbConfig.db_type
@@ -16,12 +18,13 @@ class MonitorTask:
          self.dbMonitor = CDSUtil.getDbMonitorConfigByDbMonitorId(CDSUtil,self.event.monitorId)
          self.monitorCollector =MonitorCollector(dbConfig,self.dbMonitor)
 
-    def start(self):
-         ScriptLoad.load('/script/'+self.dbMonitor.scriptPath,ScriptLoad)
+    def run(self):
+         print 'load script'
+         ScriptLoad().load(self.dbMonitor.scriptPath)
          self.monitorCollector.start()
     def stop(self):
          self.monitorCollector.stop()
 
 
 #if __name__ == '__main__':
-#   MonitorTask(None).start()
+#     MonitorTask(None).start()

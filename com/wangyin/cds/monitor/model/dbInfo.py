@@ -3,10 +3,12 @@ __author__ = 'litu'
 
 class DbConfig:
 
-    def __init__(self,db_info_id,group_id,ip,port,db_type):
+    def __init__(self,db_info_id,group_id,ip,user_name,passwd,port,db_type):
         self.group_id = group_id
         self.ip = ip
         self.port = port
+        self.user_name = user_name
+        self.passwd = passwd
         self.db_info_id = db_info_id
         self.db_type = db_type
         self.db_units = {}

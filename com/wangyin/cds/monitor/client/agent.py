@@ -6,7 +6,7 @@ from com.wangyin.cds.monitor.utils.cdsUtil import CDSUtil
 from com.wangyin.cds.monitor.scheduler.monitorScheduler import MonitorScheduler
 class Agent:
 
-    #logger = LoggerUtil.getLogger('Agent'
+    #logger = LoggerUtil.getLogger('Agent')
 
     def __init__(self):
         ConfigUtil().init_host_ip()

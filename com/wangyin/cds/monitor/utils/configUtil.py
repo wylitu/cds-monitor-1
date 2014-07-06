@@ -10,28 +10,25 @@ class ConfigUtil :
         self.config.read('../config/agent.cfg')
 
     def setEvents(self,events):
-        if events == None:
+        if events == None or len(events) == 0:
             return
-        monitorId = ''
-        eventId = ''
+        eventId_Type = ''
         for event in events:
-             monitorId =  monitorId.__add__(str(event.monitorId)).__add__(',')
-             eventId = eventId.__add__(event.eventId).__add__(',')
-        self.config.set('events', 'eventid',eventId[:-1])
-        self.config.set('events', 'monitorid',monitorId[:-1])
+             eventId_Type = eventId_Type.__add__(str(event.eventId)).__add__('_').__add__(event.eventType).__add__(',')
+        self.config.set('events', 'eventid_eventtype',eventId_Type[:-1])
         self.config.write(open('../config/agent.cfg', 'w'))
 
-    def getEventId(self,monitorId=''):
-        if monitorId == None:
-            return None
-        monitorIds =  self.config.get('events', 'monitorId').split(',')
-        eventIds =  self.config.get('events', 'eventId').split(',')
-        i=0
-        for id in monitorIds:
-             if id == monitorId:
-                 return eventIds[i]
-             i = i+1
-        return None
+    def is_config_has_event(self,event):
+        if event == None:
+            return False
+        eventid_types =  self.config.get('events', 'eventid_eventtype').split(',')
+        if len(eventid_types) == 0 :
+            return False
+        for eventid_type in eventid_types:
+             eventid_type_new = str(event.eventId).__add__('_').__add__(event.eventType)
+             if  eventid_type_new == eventid_type:
+                 return True
+        return False
 
     def set_host_ip(self,ip):
         if ip == None:
@@ -55,4 +52,5 @@ if __name__ == '__main__':
     #print ConfigUtil().get_host_ip()
     events =[]
     events.append(MonitorTaskEvent('22222', 'ddsd','1', None))
+    events.append(MonitorTaskEvent('2223', 'ddsd','2', None))
     ConfigUtil().setEvents(events)
